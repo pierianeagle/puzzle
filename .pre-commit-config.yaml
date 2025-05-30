@@ -1,22 +1,16 @@
-default_language_version:
-  python: python3.13
-
 repos:
   - repo: local
     hooks:
-      - id: black
-        name: black
-        entry: black
+      - id: lint
+        name: ruff linter
+        entry: ruff check
         language: system
         types: [python]
         pass_filenames: true
 
-      - id: pylint
-        name: pylint
-        entry: pylint
+      - id: format
+        name: ruff formatter
+        entry: ruff format
         language: system
         types: [python]
-        args: [
-          "--rcfile=.pylintrc",
-          "--disable=C0114,C0115,C0116"
-        ]
+        pass_filenames: true
