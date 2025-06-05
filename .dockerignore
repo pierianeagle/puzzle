@@ -1,0 +1,23 @@
+# Ignore everything
+**
+
+# Except for this stuff:
+!src/
+
+!docker/
+
+!.python-version
+!pyproject.toml
+!uv.lock
+
+!logging.ini
+!pytest.ini
+
+# But not that stuff:
+# General
+**/.DS_Store
+**/.AppleDouble
+**/.LSOverride
+
+# Thumbnails
+**/._*
