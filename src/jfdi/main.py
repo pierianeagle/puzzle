@@ -25,6 +25,10 @@ from nautilus_trader.examples.strategies.subscribe import (
 from nautilus_trader.live.node import TradingNode
 from nautilus_trader.model.identifiers import InstrumentId
 
+if os.environ["MODE"] == "PAPER":
+    os.environ["IBG_PORT"] = os.environ["IBG_PAPER_PORT"]
+    os.environ["IB_ACCOUNT_ID"] = os.environ["IB_PAPER_ACCOUNT_ID"]
+
 test_instrument_str = "SPY.ARCA"
 instrument_provider = InteractiveBrokersInstrumentProviderConfig(
     symbology_method=SymbologyMethod.IB_SIMPLIFIED,
@@ -37,7 +41,7 @@ config_node = TradingNodeConfig(
     data_clients={
         IB: InteractiveBrokersDataClientConfig(
             ibg_host=os.environ["IBG_HOST"],
-            ibg_port=int(os.environ["IBG_PAPER_PORT"]),
+            ibg_port=int(os.environ["IBG_PORT"]),
             ibg_client_id=1,
             handle_revised_bars=False,
             use_regular_trading_hours=True,
@@ -48,9 +52,9 @@ config_node = TradingNodeConfig(
     exec_clients={
         IB: InteractiveBrokersExecClientConfig(
             ibg_host=os.environ["IBG_HOST"],
-            ibg_port=int(os.environ["IBG_PAPER_PORT"]),
+            ibg_port=int(os.environ["IBG_PORT"]),
             ibg_client_id=1,
-            account_id=os.environ["IB_PAPER_ACCOUNT_ID"],
+            account_id=os.environ["IB_ACCOUNT_ID"],
             instrument_provider=instrument_provider,
             routing=RoutingConfig(
                 default=True,
