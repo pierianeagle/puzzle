@@ -1,0 +1,12 @@
+env:
+  - name: MODE
+    value: "PAPER"
+  - name: IBG_HOST
+    value: "host.docker.internal"  # for docker or kind
+  - name: IBG_PAPER_PORT
+    value: "7497"
+
+secrets:
+  - name: ib
+    keys:
+      - IB_PAPER_ACCOUNT_ID

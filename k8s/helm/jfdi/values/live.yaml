@@ -1,0 +1,12 @@
+env:
+  - name: MODE
+    value: "LIVE"
+  - name: IBG_HOST
+    value: "host.docker.internal"  # for docker or kind
+  - name: IBG_PORT
+    value: "7496"
+
+secrets:
+  - name: ib
+    keys:
+      - IB_ACCOUNT_ID

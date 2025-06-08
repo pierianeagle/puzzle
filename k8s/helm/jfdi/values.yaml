@@ -1,0 +1,25 @@
+replicaCount: 1
+
+image:
+  repository: shittles/jfdi
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+container:
+  workingDir: "/app"
+  # command: ["python"]  # for docker
+  command: [".venv/bin/python"]
+  args: ["-m", "jfdi.main"]
+
+nodeSelector:
+  # kubernetes.io/hostname: docker-desktop  # for docker
+  kubernetes.io/hostname: puzzle-control-plane
+
+tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "dedicated"
+    operator: "Equal"
+    value: "trading"
+    effect: "NoSchedule"
