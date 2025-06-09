@@ -1,0 +1,27 @@
+tenant:
+  name: tenant
+  configSecret:
+    name: tenant-env-configuration
+    existingSecret: true
+
+  pools:
+  - servers: 1
+    name: pool-0
+    volumesPerServer: 1
+    size: 10Gi
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+      fsGroupChangePolicy: "OnRootMismatch"
+      runAsNonRoot: true
+    containerSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      seccompProfile:
+        type: RuntimeDefault
