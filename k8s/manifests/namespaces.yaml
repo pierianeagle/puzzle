@@ -11,4 +11,9 @@ metadata:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: storage
+  name: minio-operator 
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: minio-tenant 
