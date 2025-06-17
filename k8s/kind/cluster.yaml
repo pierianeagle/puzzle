@@ -11,3 +11,10 @@ nodes:
         hostPort: 7947
         protocol: TCP
   - role: worker
+    extraPortMappings:
+      - containerPort: 9443  # minio tenant console
+        hostPort: 9443
+        protocol: TCP
+    extraMounts:
+    - hostPath: /Users/alpal/Archives/minio
+      containerPath: /mnt

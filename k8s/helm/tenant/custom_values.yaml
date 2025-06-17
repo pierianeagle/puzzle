@@ -3,12 +3,12 @@ tenant:
   configSecret:
     name: tenant-env-configuration
     existingSecret: true
-
   pools:
   - servers: 1
     name: pool-0
     volumesPerServer: 1
     size: 10Gi
+    storageClassName: local-storage
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
