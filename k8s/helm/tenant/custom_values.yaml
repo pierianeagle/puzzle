@@ -3,6 +3,8 @@ tenant:
   configSecret:
     name: tenant-env-configuration
     existingSecret: true
+  certificate:
+    requestAutoCert: true
   pools:
   - servers: 1
     name: pool-0
