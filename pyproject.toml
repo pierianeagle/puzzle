@@ -9,8 +9,10 @@ readme = "README.md"
 requires-python = ">=3.13"
 
 dependencies = [
+    "nautilus-trader>=1.217.0",
     "numpy>=2.2.6",
     "pandas>=2.2.3",
+    "pyarrow>=20.0.0",
     "scipy>=1.15.3",
 ]
 
@@ -22,6 +24,21 @@ dev = [
     "nbformat>=5.10.4",
     "pre-commit>=4.2.0",
     "ruff>=0.11.12",
+]
+jfmi = [
+    "plotly>=6.1.2",
+    "scikit-learn>=1.7.0",
+]
+jfdi = [
+    "defusedxml>=0.7.1",
+    "nautilus-ibapi>=10.30.1",
+]
+jfri = [
+    "httpx>=0.28.1",
+    "prefect>=3.4.4",
+    "prefect-ray>=0.4.4",
+    "pydantic>=2.11.5",
+    "ray>=2.46.0",
 ]
 test = [
     "pytest>=8.3.5",
@@ -43,6 +60,7 @@ select = [
   "RUF",  # ruff-specific
 ]
 ignore = [
+    "B008",  # function-call-in-default-argument
     "D100",  # undocumented-public-module
     "D101",  # undocumented-public-class
     "D102",  # undocumented-public-method
@@ -54,7 +72,7 @@ ignore = [
     "D417",  # undocumented-param
     "E203",  # whitespace-before-punctuation
     "F401",  # unused-import
-    "B008",  # function-call-in-default-argument
+    "N803",  # invalid-argument-name
     "S101",  # assert
 ]
 
