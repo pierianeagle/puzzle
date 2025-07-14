@@ -23,7 +23,8 @@ class PurgedKFold(KFold):
             when the label becomes observable).
         n_splits:
             The number of folds, which must be greater than 1.
-        pct_embargo: A percentage embargo size.
+        pct_embargo:
+            The percentage of the dataset to embargo after each test set.
     """
 
     def __init__(
@@ -47,8 +48,8 @@ class PurgedKFold(KFold):
 
         Args:
             X:
-                Training data of shape (n_samples, n_features), where the number of
-                samples is the same as in sr_vertical_barriers.
+                Training data of shape (n_samples, n_features), where the samples
+                correspond to those in sr_vertical_barriers.
             y:
                 Target data of shape (n_samples,), for supervised learning. Always
                 ignored, exists for compatibility.
@@ -76,10 +77,6 @@ class PurgedKFold(KFold):
             # Parition the test set indices first.
             test_indices = indices[start_index:end_index]
 
-            # Optionally, embargo samples after the end of the test set.
-            if end_index < X.shape[0]:
-                end_index += int(X.shape[0] * self.pct_embargo)
-
             # The calculation can be accelerated if the bounds are contiguous.
             # sr_test_bounds_times = self.sr_vertical_barriers.iloc[
             #     start_index:end_index
@@ -98,5 +95,12 @@ class PurgedKFold(KFold):
             train_indices = self.sr_vertical_barriers.index.get_indexer(
                 sr_train_times.index
             )
+
+            # Embargo train set samples after the end of the test set.
+            embargo_index = end_index - 1 + int(X.shape[0] * self.pct_embargo)
+
+            train_indices = train_indices[
+                (train_indices < end_index) | (train_indices > embargo_index)
+            ]
 
             yield train_indices, test_indices

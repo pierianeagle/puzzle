@@ -29,8 +29,10 @@ class CombinatorialPurgedKFold(KFold):
         n_folds:
             The number of train set splits, which must be greater than 1.
         n_test_folds:
-            The number of test set splits, which must be greater than 1.
-        pct_embargo: A percentage embargo to apply after each test set.
+            The number of test set splits, which must be equal to, or greater than 1 and
+            less than n_folds.
+        pct_embargo:
+            The percentage of the dataset to embargo after each test set.
     """
 
     def __init__(
@@ -73,8 +75,8 @@ class CombinatorialPurgedKFold(KFold):
 
         Args:
             X:
-                Training data of shape (n_samples, n_features), where the number of
-                samples is the same as in sr_vertical_barriers.
+                Training data of shape (n_samples, n_features), where the samples
+                correspond to those in sr_vertical_barriers.
             y:
                 Target data of shape (n_samples,), for supervised learning. Always
                 ignored, exists for compatibility.
@@ -131,13 +133,23 @@ class CombinatorialPurgedKFold(KFold):
                     else:
                         self.backtest_paths[max(self.backtest_paths) + 1] = [entry]
 
-                if end_index < X.shape[0]:
-                    end_index += int(X.shape[0] * self.pct_embargo)
+                # Since the test sets are non-contiguous, it's simplest to utilise the
+                # the purging function to apply the embargo. If applying an embargo
+                # would create a larger gap than purging would create, use that index.
+                upper_bound = max(
+                    self.sr_vertical_barriers.iloc[end_index - 1],
+                    self.sr_vertical_barriers.index[
+                        min(
+                            end_index - 1 + int(X.shape[0] * self.pct_embargo),
+                            X.shape[0] - 1,
+                        )
+                    ],
+                )
 
                 test_bounds_times_srs.append(
                     pd.Series(
                         index=[self.sr_vertical_barriers.index[start_index]],
-                        data=[self.sr_vertical_barriers.iloc[end_index - 1]],
+                        data=[upper_bound],
                     )
                 )
 
