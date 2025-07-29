@@ -7,17 +7,32 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def read_feather_data_from_catalog(filepath: Path) -> pd.DataFrame:
+def read_feather_data_from_catalog(
+    filepath: Path,
+    dtype: Literal["pandas", "arrow"] = "pandas",
+) -> pd.DataFrame:
     """Read feather data that's been saved to the catalog."""
     with open(filepath, "rb") as f:
         stream = pa.ipc.open_stream(f)
-        df = stream.read_all().to_pandas()
+        table = stream.read_all()
 
-    df.index = pd.to_datetime(df["ts_init"], unit="ns", origin="unix")
+    if dtype == "arrow":
+        return table
 
-    df = df.drop(columns=["ts_init", "date"])
+    elif dtype == "pandas":
+        df = table.to_pandas()
 
-    return df
+        df.index = pd.to_datetime(df["ts_init"], unit="ns", origin="unix")
+
+        df = df.drop(columns=["ts_init"])
+
+        return df
+
+    else:
+        raise ValueError(
+            f"Invalid dtype. Choose one of: "
+            f"{read_feather_data_from_catalog.__annotations__['dtype'].__args__}"
+        )
 
 
 def read_dataframe_with_metadata_from_parquet(
