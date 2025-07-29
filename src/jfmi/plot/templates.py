@@ -102,12 +102,30 @@ COLOURS = {
 }
 
 TEMPLATE_DARK = go.layout.Template(
+    data=dict(
+        candlestick=[
+            dict(
+                increasing=dict(
+                    line=dict(color=COLOURS["green"][4]),
+                    fillcolor=COLOURS["green"][4],
+                ),
+                decreasing=dict(
+                    line=dict(color=COLOURS["red"][4]),
+                    fillcolor=COLOURS["red"][4],
+                ),
+            )
+        ],
+        scatter=[
+            dict(
+                line=dict(color=COLOURS["purple"][4]),
+                marker=dict(color=COLOURS["blue"][4]),
+            )
+        ],
+    ),
     layout=dict(
         paper_bgcolor=COLOURS["grey"][9],
         plot_bgcolor=COLOURS["grey"][9],
-        font=dict(
-            color=COLOURS["grey"][2],
-        ),
+        font=dict(color=COLOURS["grey"][2]),
         title=dict(font=dict(color=COLOURS["grey"][2])),
         xaxis=dict(
             color=COLOURS["grey"][4],
@@ -130,14 +148,20 @@ TEMPLATE_DARK = go.layout.Template(
             font=dict(color=COLOURS["grey"][4]),
         ),
         colorway=[
-            COLOURS["blue"][3],
-            COLOURS["green"][3],
-            COLOURS["orange"][3],
-            COLOURS["red"][3],
-            COLOURS["purple"][3],
-            COLOURS["pink"][3],
-            COLOURS["yellow"][3],
+            COLOURS["blue"][4],
+            COLOURS["green"][4],
+            COLOURS["orange"][4],
+            COLOURS["red"][4],
+            COLOURS["purple"][4],
+            COLOURS["pink"][4],
+            COLOURS["yellow"][4],
         ],
+        # A hack-y work-around to store additional colours.
+        meta={
+            "extras": {
+                "right_censored": COLOURS["yellow"][4],
+            }
+        },
     ),
 )
 
@@ -164,6 +188,11 @@ TEMPLATE_LAYOUT = go.layout.Template(
         autosize=False,
         width=800,
         height=400,
-        margin=dict(l=50, r=50, b=50, t=40),
+        margin=dict(
+            t=40,
+            b=50,
+            l=50,
+            r=50,
+        ),
     )
 )
