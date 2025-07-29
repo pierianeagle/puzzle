@@ -1,3 +1,4 @@
+exclude: ^src/jfdi/extensions/indicators/ta_lib/
 repos:
   - repo: local
     hooks:
@@ -7,7 +8,6 @@ repos:
         language: system
         types: [python]
         pass_filenames: true
-        exclude: src/jfdi/extensions/ta_lib/.*
 
       - id: format
         name: ruff formatter
