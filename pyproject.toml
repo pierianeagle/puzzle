@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 
 dependencies = [
-    "nautilus-trader>=1.217.0",
+    "nautilus-trader>=1.219.0",
     "numpy>=2.2.6",
     "pandas>=2.2.3",
     "pyarrow>=20.0.0",
@@ -36,8 +36,8 @@ jfdi = [
 ]
 jfri = [
     "httpx>=0.28.1",
-    "prefect>=3.4.4",
-    "prefect-ray>=0.4.4",
+    # "prefect>=3.4.4",
+    # "prefect-ray>=0.4.4",
     "pydantic>=2.11.5",
     "ray>=2.46.0",
 ]
