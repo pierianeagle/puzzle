@@ -79,6 +79,7 @@ class WeightActor(Actor):
             weight = get_weight(
                 self.instrument,
                 data.equity,
+                self.config.venue,
                 self.config.reporting_currency,
                 self.portfolio,
                 self.cache,
@@ -106,6 +107,7 @@ class WeightActor(Actor):
 def get_weight(
     instrument: Instrument,
     account_equity: Money,
+    exchange_rate_venue: Venue,
     reporting_currency: Currency,
     portfolio: Portfolio,
     cache: Cache,
@@ -115,7 +117,8 @@ def get_weight(
         # If the portfolio is short multiply the allocation by -1.
         (portfolio.is_net_long(instrument.id) * 2 - 1)
         * portfolio.net_exposure(instrument.id).as_double()
-        * cache.get_mark_xrate(
+        * cache.get_xrate(
+            venue=exchange_rate_venue,
             from_currency=instrument.get_cost_currency(),
             to_currency=reporting_currency,
         )

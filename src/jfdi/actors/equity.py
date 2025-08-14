@@ -64,7 +64,10 @@ class EquityActor(Actor):
                 equities = get_equities(balances_total, unrealised_pnls)
 
                 equity = get_equity(
-                    equities, self.config.reporting_currency, self.cache
+                    equities,
+                    self.config.venue,
+                    self.config.reporting_currency,
+                    self.cache,
                 )
 
                 equity_data = EquityData(
@@ -107,22 +110,22 @@ def get_equities(
 
 def get_equity(
     equities: dict[Currency, Money],
+    exchange_rate_venue: Venue,
     reporting_currency: Currency,
     cache: Cache,
 ) -> Money:
     """Calculate the account value in the reporting currency."""
-    equity = 0
-
-    for currency, money in equities.items():
-        if currency == reporting_currency:
-            equity += money
-        else:
-            exchange_rate = cache.get_mark_xrate(
-                from_currency=currency, to_currency=reporting_currency
+    equity = Money(
+        sum(
+            money
+            * cache.get_xrate(
+                venue=exchange_rate_venue,
+                from_currency=currency,
+                to_currency=reporting_currency,
             )
-
-            equity += money * exchange_rate
-
-    equity = Money(equity, reporting_currency)
+            for currency, money in equities.items()
+        ),
+        reporting_currency,
+    )
 
     return equity

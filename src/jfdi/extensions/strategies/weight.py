@@ -30,6 +30,7 @@ class WeightStrategy(Strategy):
             position.instrument_id: get_weight(
                 self.cache.instrument(position.instrument_id),
                 account_equity,
+                self.config.venue,
                 self.config.reporting_currency,
                 self.portfolio,
                 self.cache,
