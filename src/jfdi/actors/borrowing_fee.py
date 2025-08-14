@@ -5,7 +5,14 @@ from nautilus_trader.common.events import TimeEvent
 from nautilus_trader.core import UUID4
 from nautilus_trader.core.data import Data
 from nautilus_trader.core.message import Event
-from nautilus_trader.model import AccountBalance, ComponentId, DataType, Money, Venue
+from nautilus_trader.model import (
+    AccountBalance,
+    ComponentId,
+    Currency,
+    DataType,
+    Money,
+    Venue,
+)
 from nautilus_trader.model.custom import customdataclass
 from nautilus_trader.model.events import AccountState
 
@@ -30,6 +37,7 @@ class BorrowingFeeActor(Actor):
         """
         super().__init__(config)
 
+        self.currency = Currency.from_str("USD")
         self.borrowing_fee_key = f"{self.config.venue}_BORROWING_FEE"
         self.timer_key = f"{self.id}_TIMER"
 
@@ -47,9 +55,8 @@ class BorrowingFeeActor(Actor):
         if isinstance(event, TimeEvent):
             if event.name == self.timer_key:
                 account = self.portfolio.account(self.config.venue)
-                currency = account.base_currency
 
-                account_balance = account.balance(currency)
+                account_balance = account.balance(self.currency)
 
                 total_initial_notional_value = 0
 
@@ -75,7 +82,7 @@ class BorrowingFeeActor(Actor):
                         BorrowingFeeData,
                         metadata={
                             "venue": self.config.venue,
-                            "currency_code": currency.code,
+                            "currency_code": self.currency.code,
                         },
                     ),
                     borrowing_fee_data,
@@ -87,10 +94,14 @@ class BorrowingFeeActor(Actor):
                 account_balance_dict = account_balance.to_dict()
 
                 account_balance_dict["total"] = str(
-                    Money(account_balance.total - borrowing_fee, currency).as_decimal()
+                    Money(
+                        account_balance.total - borrowing_fee, self.currency
+                    ).as_decimal()
                 )
                 account_balance_dict["free"] = str(
-                    Money(account_balance.free - borrowing_fee, currency).as_decimal()
+                    Money(
+                        account_balance.free - borrowing_fee, self.currency
+                    ).as_decimal()
                 )
 
                 modified_account_balance = AccountBalance.from_dict(
@@ -100,7 +111,7 @@ class BorrowingFeeActor(Actor):
                 account_state = AccountState(
                     account_id=account.id,
                     account_type=account.type,
-                    base_currency=currency,
+                    base_currency=account.base_currency,
                     reported=False,
                     balances=[modified_account_balance],
                     margins=list(account.margins().values()),

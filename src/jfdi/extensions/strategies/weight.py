@@ -1,50 +1,38 @@
-from nautilus_trader.model import InstrumentId, Money, Quantity
+from nautilus_trader.model import InstrumentId, Money, Quantity, Venue
 from nautilus_trader.model.enums import OrderSide, PriceType
 from nautilus_trader.model.objects import Currency
 from nautilus_trader.model.orders.base import Order
 from nautilus_trader.trading.strategy import Strategy, StrategyConfig
 
+from jfdi.actors.weight import get_weight
 from shared.data.rounding import round_directional
 
 
+class WeightStrategyConfig(StrategyConfig):
+    venue: Venue
+    reporting_currency: Currency
+
+
 class WeightStrategy(Strategy):
-    def __init__(self, config: StrategyConfig) -> None:
+    def __init__(self, config: WeightStrategyConfig) -> None:
         """A strategy wrapper that adds support for target weights.
 
         This strategy does not support multi-currency accounts.
         """
         super().__init__(config)
 
-    def get_equities(self) -> dict[Currency, float]:
-        """Calculate the portfolio's equity in a given currency."""
-        balances_total = self.account.balances_total()
-        unrealised_pnls = self.portfolio.unrealized_pnls(self.venue)
-
-        currencies_union = balances_total.keys() | unrealised_pnls.keys()
-
-        equities = {
-            currency: balances_total.get(
-                currency, Money(0, currency=currency)
-            ).as_double()
-            # Unrealised pnls are reported in the settlement currency.
-            + unrealised_pnls.get(currency, Money(0, currency=currency)).as_double()
-            for currency in currencies_union
-        }
-
-        return equities
-
     def get_current_weights(
         self,
-        # equity: float,
-        equities: dict[Currency, float],
+        account_equity: Money,
     ) -> dict[InstrumentId, float]:
         """Calculate the the portolfio's current weights (directional)."""
         current_weights = {
-            position.instrument_id: (
-                # If the portfolio is short multiply the allocation by -1.
-                (self.portfolio.is_net_long(position.instrument_id) * 2 - 1)
-                * self.portfolio.net_exposure(position.instrument_id).as_double()
-                / equities[self.account.base_currency]
+            position.instrument_id: get_weight(
+                self.cache.instrument(position.instrument_id),
+                account_equity,
+                self.config.reporting_currency,
+                self.portfolio,
+                self.cache,
             )
             for position in self.cache.positions_open(strategy_id=self.id)
         }
