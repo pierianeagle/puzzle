@@ -1,5 +1,5 @@
-from nautilus_trader.cache import Cache
 from nautilus_trader.common.actor import Actor, ActorConfig
+from nautilus_trader.common.enums import LogColor
 from nautilus_trader.core.data import Data
 from nautilus_trader.model import (
     ComponentId,
@@ -10,9 +10,7 @@ from nautilus_trader.model import (
     Venue,
 )
 from nautilus_trader.model.custom import customdataclass
-from nautilus_trader.model.enums import PriceType
 from nautilus_trader.model.instruments import Instrument
-from nautilus_trader.portfolio import Portfolio
 
 from jfdi.actors.equity import EquityData
 
@@ -26,7 +24,8 @@ class WeightData(Data):
 class WeightActorConfig(ActorConfig):
     instrument_id: InstrumentId
     # This has to be its own argument because `IB_VENUE` is not `instrument_id.venue`.
-    venue: Venue
+    account_venue: Venue
+    exchange_rate_venue: Venue
     reporting_currency: Currency
     # Unique component ids are required if you want to run multiple components
     # of the same class.
@@ -35,7 +34,11 @@ class WeightActorConfig(ActorConfig):
 
 class WeightActor(Actor):
     def __init__(self, config: WeightActorConfig) -> None:
-        """Publish the instrument's portfolio weight on account equity releases."""
+        """Publish the instrument's portfolio weight on account equity releases.
+
+        This actor keeps the account and exchange rate venues are separate to support
+        Interactive Brokers.
+        """
         super().__init__(config)
 
         self.weight_key = f"{self.config.instrument_id}-WEIGHT"
@@ -54,7 +57,7 @@ class WeightActor(Actor):
             DataType(
                 EquityData,
                 metadata={
-                    "venue": self.config.venue,
+                    "venue": self.config.account_venue,
                     "currency_code": self.config.reporting_currency,
                 },
             )
@@ -65,7 +68,7 @@ class WeightActor(Actor):
             DataType(
                 EquityData,
                 metadata={
-                    "venue": self.config.venue,
+                    "venue": self.config.account_venue,
                     "currency_code": self.config.reporting_currency,
                 },
             )
@@ -74,13 +77,16 @@ class WeightActor(Actor):
     def on_data(self, data: Data) -> None:
         if isinstance(data, EquityData):
             weight = get_weight(
+                self,
                 self.instrument,
                 data.equity,
-                self.config.venue,
+                self.config.exchange_rate_venue,
                 self.config.reporting_currency,
-                self.portfolio,
-                self.cache,
             )
+
+            if weight is None:
+                self.log.warning("NO EXCHANGE RATES AVAILABLE.", LogColor.CYAN)
+                return
 
             weight_data = WeightData(
                 ts_event=data.ts_event,
@@ -93,7 +99,7 @@ class WeightActor(Actor):
                 DataType(
                     WeightData,
                     metadata={
-                        "venue": self.config.venue,
+                        "venue": self.config.account_venue,
                         "currency_code": self.config.reporting_currency.code,
                     },
                 ),
@@ -102,23 +108,27 @@ class WeightActor(Actor):
 
 
 def get_weight(
+    actor: Actor,
     instrument: Instrument,
     account_equity: Money,
     exchange_rate_venue: Venue,
     reporting_currency: Currency,
-    portfolio: Portfolio,
-    cache: Cache,
 ) -> float:
     """Calculate the instrument weight in the reporting currency."""
+    exchange_rate = actor.cache.get_xrate(
+        venue=exchange_rate_venue,
+        from_currency=instrument.get_cost_currency(),
+        to_currency=reporting_currency,
+    )
+
+    if exchange_rate is None:
+        return None
+
     weight = (
         # If the portfolio is short multiply the allocation by -1.
-        (portfolio.is_net_long(instrument.id) * 2 - 1)
-        * portfolio.net_exposure(instrument.id).as_double()
-        * cache.get_xrate(
-            venue=exchange_rate_venue,
-            from_currency=instrument.get_cost_currency(),
-            to_currency=reporting_currency,
-        )
+        (actor.portfolio.is_net_long(instrument.id) * 2 - 1)
+        * actor.portfolio.net_exposure(instrument.id).as_double()
+        * exchange_rate
         / account_equity
     )
     return weight

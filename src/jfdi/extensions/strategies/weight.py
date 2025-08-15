@@ -9,7 +9,7 @@ from shared.data.rounding import round_directional
 
 
 class WeightStrategyConfig(StrategyConfig):
-    venue: Venue
+    exchange_rate_venue: Venue
     reporting_currency: Currency
 
 
@@ -25,12 +25,11 @@ class WeightStrategy(Strategy):
         """Calculate the the portolfio's current weights (directional)."""
         current_weights = {
             position.instrument_id: get_weight(
+                self,
                 self.cache.instrument(position.instrument_id),
                 account_equity,
-                self.config.venue,
+                self.config.exchange_rate_venue,
                 self.config.reporting_currency,
-                self.portfolio,
-                self.cache,
             )
             for position in self.cache.positions_open(strategy_id=self.id)
         }
