@@ -15,10 +15,7 @@ class WeightStrategyConfig(StrategyConfig):
 
 class WeightStrategy(Strategy):
     def __init__(self, config: WeightStrategyConfig) -> None:
-        """A strategy wrapper that adds support for target weights.
-
-        This strategy does not support multi-currency accounts.
-        """
+        """A strategy wrapper that adds support for target weights."""
         super().__init__(config)
 
     def get_current_weights(

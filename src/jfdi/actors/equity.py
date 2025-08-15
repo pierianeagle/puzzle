@@ -33,10 +33,7 @@ class EquityActorConfig(ActorConfig):
 
 class EquityActor(Actor):
     def __init__(self, config: EquityActorConfig) -> None:
-        """Publish the account's equity.
-
-        This actor does not support multi-currency accounts.
-        """
+        """Publish the account's equity."""
         super().__init__(config)
 
         self.equity_key = f"{self.config.venue}-EQUITY"

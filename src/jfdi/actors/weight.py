@@ -35,10 +35,7 @@ class WeightActorConfig(ActorConfig):
 
 class WeightActor(Actor):
     def __init__(self, config: WeightActorConfig) -> None:
-        """Publish the instrument's portfolio weight on account equity releases.
-
-        This actor does not support multi-currency accounts.
-        """
+        """Publish the instrument's portfolio weight on account equity releases."""
         super().__init__(config)
 
         self.weight_key = f"{self.config.instrument_id}-WEIGHT"
