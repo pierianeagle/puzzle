@@ -5,7 +5,7 @@ from prefect.task_runners import ThreadPoolTaskRunner
 
 from jfri import RESOURCE_ID
 from jfri.tasks.alpha_vantage.catalog import get_historic_options_chain_filepath
-from jfri.tasks.alpha_vantage.ingest_data_as_json import ingest_data_as_json
+from jfri.tasks.alpha_vantage.ingest_data import ingest_data_as_json
 
 INGESTED_EVENT = "av.ingested_historic_options_chain"
 
