@@ -60,7 +60,7 @@ def read_ingested_data_and_validate_metadata(
     df_ingested = pd.DataFrame.from_records(records)
 
     metadata = OptionsChainMetadata(
-        source="alpha_vantage",
+        source="av",
         endpoint=payload["endpoint"],
         message=payload["message"],
         source_file_path=str(ingested_path),
