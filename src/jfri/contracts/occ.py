@@ -63,7 +63,7 @@ def parse_occ_tickers(contract_ids: pd.Series) -> pd.DataFrame:
 
     return pd.DataFrame(
         data={
-            "symbol": df_parsed["u"],
+            "underlying": df_parsed["u"],
             "expiration": pd.to_datetime(
                 "20" + df_parsed["y"] + "-" + df_parsed["m"] + "-" + df_parsed["d"]
             ),
