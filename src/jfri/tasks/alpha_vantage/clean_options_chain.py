@@ -17,7 +17,11 @@ from jfri.tasks.clean_options_chain import (
 )
 from shared.io.arrow import write_dataframe_with_metadata_to_parquet
 
-TRANSFORM_VERSION = "1.1.0"
+TRANSFORM_VERSION = "1.2.0"
+
+RENAMES = {
+    "contractID": "option",
+}
 
 FLOAT_COLUMNS = (
     "strike",
@@ -78,7 +82,7 @@ def clean_and_validate_data(
     df_ingested: pd.DataFrame,
 ) -> DataFrame[OptionsChain]:
     """Clean and validate an ingested EOD options chain."""
-    df = df_ingested.rename(columns={"contractID": "contract_id"})
+    df = df_ingested.rename(columns=RENAMES)
 
     # Older historic data occasionally emits CALL/PUT instead of call/put.
     df["type"] = df["type"].str.lower()
@@ -95,7 +99,9 @@ def clean_and_validate_data(
     sr_mismatched = find_mismatched_rows(df)
     df = resolve_bad_rows(df, sr_invalid | sr_mismatched)
 
-    return OptionsChain.validate(df)
+    schema_columns = list(OptionsChain.to_schema().columns)
+
+    return OptionsChain.validate(df[schema_columns])
 
 
 @task
@@ -110,7 +116,5 @@ def clean_historic_options_chain(ingested_path: Path, cleaned_path: Path):
     df = clean_and_validate_data(df_ingested)
 
     write_dataframe_with_metadata_to_parquet(
-        cleaned_path,
-        df,
-        **metadata.model_dump(mode="json"),
+        cleaned_path, df, **metadata.model_dump(mode="json")
     )
