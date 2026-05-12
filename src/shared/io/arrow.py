@@ -36,7 +36,7 @@ def read_feather_data_from_catalog(
 
 
 def read_dataframe_with_metadata_from_parquet(
-    filepath: str,
+    filepath: Path,
     key: str = "metadata",
 ) -> tuple[pd.DataFrame, dict]:
     """Read a DataFrame with JSON metadata from Parquet using PyArrow."""
@@ -49,7 +49,7 @@ def read_dataframe_with_metadata_from_parquet(
 
 
 def write_dataframe_with_metadata_to_parquet(
-    filepath: str,
+    filepath: Path,
     df: pd.DataFrame,
     key: str = "metadata",
     compression: Literal["NONE", "SNAPPY", "GZIP", "BROTLI", "LZ4", "ZSTD"] = "GZIP",

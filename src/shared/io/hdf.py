@@ -1,8 +1,10 @@
+from pathlib import Path
+
 import pandas as pd
 
 
 def read_dataframe_with_metadata_from_hdf(
-    filepath: str,
+    filepath: Path,
     df: pd.DataFrame,
     key: str = "data",
 ) -> tuple[pd.DataFrame, dict]:
@@ -15,7 +17,7 @@ def read_dataframe_with_metadata_from_hdf(
 
 
 def write_dataframe_with_metadata_to_hdf(
-    filepath: str,
+    filepath: Path,
     df: pd.DataFrame,
     key: str = "data",
     **metadata,
