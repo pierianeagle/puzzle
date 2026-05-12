@@ -2,7 +2,7 @@ import pandas as pd
 from prefect import flow
 from prefect.events import emit_event
 
-from jfri import INGESTED_RESOURCE_ID
+from jfri import RESOURCE_ID
 from jfri.tasks.cboe.catalog import get_historic_options_chain_filepath
 from jfri.tasks.cboe.ingest_options_chain import get_unique_symbols
 from jfri.tasks.cboe.ingest_options_chain import (
@@ -31,6 +31,6 @@ def ingest_todays_options_chain(ticker: str) -> None:
         for symbol in symbols:
             emit_event(
                 event=INGESTED_EVENT,
-                resource={"prefect.resource.id": INGESTED_RESOURCE_ID},
+                resource={"prefect.resource.id": RESOURCE_ID},
                 payload={"ticker": ticker, "symbol": symbol, "date": iso_date},
             )
