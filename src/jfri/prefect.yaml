@@ -1,0 +1,81 @@
+name: jfri
+prefect-version: "3.x"
+
+# Make `src/` importable when the worker pulls this project so flow entrypoints
+# (e.g. `jfri.flows.alpha_vantage.ingest_options_chain:...`) resolve.
+pull:
+  - prefect.deployments.steps.set_working_directory:
+      directory: /Users/alpal/Projects/puzzle
+  - prefect.deployments.steps.run_shell_script:
+      script: 'echo "PYTHONPATH=$PWD/src"'
+      stream_output: true
+
+definitions:
+  work_pools:
+    default: &default_pool
+      name: jfri-process-pool   # create once: prefect work-pool create jfri-process-pool --type process
+
+deployments:
+
+  - name: ingest_todays_spx_historic_options_chain_from_av
+    entrypoint: src/jfri/flows/alpha_vantage/ingest_options_chain.py:ingest_historic_options_chain
+    work_pool:
+      <<: *default_pool
+    parameters:
+      symbol: SPX
+    schedules:
+      - cron: "30 16 * * 1-5"
+        timezone: "America/New_York"
+        active: true
+
+  - name: ingest_all_historic_options_chains_from_av
+    entrypoint: src/jfri/flows/alpha_vantage/ingest_options_chain.py:backfill_ingest_historic_options_chain
+    work_pool:
+      <<: *default_pool
+
+  - name: clean_todays_spx_historic_options_chain_on_ingest_from_av
+    entrypoint: src/jfri/flows/alpha_vantage/clean_options_chain.py:clean_historic_options_chain
+    work_pool:
+      <<: *default_pool
+    triggers:
+      - type: event
+        enabled: true
+        match:
+          prefect.resource.id: jfri
+        expect:
+          - av.ingested_historic_options_chain
+        parameters:
+          symbol: "{{ event.payload.symbol }}"
+          date: "{{ event.payload.date }}"
+
+  - name: clean_all_historic_options_chains_from_av
+    entrypoint: src/jfri/flows/alpha_vantage/clean_options_chain.py:backfill_clean_historic_options_chain
+    work_pool:
+      <<: *default_pool
+
+  - name: ingest_todays_spx_historic_options_chain_from_cboe
+    entrypoint: src/jfri/flows/cboe/ingest_options_chain.py:ingest_todays_options_chain
+    work_pool:
+      <<: *default_pool
+    parameters:
+      ticker: SPX
+    schedules:
+      - cron: "30 16 * * 1-5"
+        timezone: "America/New_York"
+        active: true
+
+  - name: clean_todays_spx_historic_options_chain_on_ingest_from_cboe
+    entrypoint: src/jfri/flows/cboe/clean_options_chain.py:clean_todays_options_chain_flow
+    work_pool:
+      <<: *default_pool
+    triggers:
+      - type: event
+        enabled: true
+        match:
+          prefect.resource.id: jfri
+        expect:
+          - cboe.ingested_todays_options_chain
+        parameters:
+          ticker: "{{ event.payload.ticker }}"
+          symbol: "{{ event.payload.symbol }}"
+          date: "{{ event.payload.date }}"
