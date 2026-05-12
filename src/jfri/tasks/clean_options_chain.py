@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from prefect import get_run_logger
 
@@ -78,7 +79,7 @@ def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
     )
     sr_bad_type = df["type"] != df_parsed["type"]
     sr_bad_strike = pd.Series(
-        df["strike"].to_numpy() != df_parsed["strike"].to_numpy(),
+        ~np.isclose(df["strike"], df_parsed["strike"], rtol=0, atol=1e-6),
         index=df.index,
     )
 
