@@ -88,7 +88,7 @@ class TurbulenceActor(Actor):
                 matrix_returns = np.vstack(list(self.returns.values()))
 
                 # In order to calculate the cumulative return I need to reverse the
-                # lastest returns (of length `fast_period``) before taking the geometric
+                # lastest returns (of length `fast_period`) before taking the geometric
                 # product.
                 # r = matrix_returns[:, 0]
                 r = (

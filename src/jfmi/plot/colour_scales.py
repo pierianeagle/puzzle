@@ -7,7 +7,7 @@ def plot_colour_scale(colour_scale: list[str]) -> go.Figure:
 
     Typical usage example:
     >>> colour_scale = px.colors.sequential.Viridis
-    ... fig = plot_colour_scale(colour_scale)
+    >>> fig = plot_colour_scale(colour_scale)
     """
     n_colours = len(colour_scale)
 
@@ -48,8 +48,8 @@ def plot_continuous_colour_scale(
 
     Typical usage example:
     >>> colour_scale = px.colors.sequential.Viridis
-    ... continuous_colour_scale = px.colors.make_colorscale(colour_scale)
-    ... fig = plot_continuous_colour_scale(continuous_colour_scale)
+    >>> continuous_colour_scale = px.colors.make_colorscale(colour_scale)
+    >>> fig = plot_continuous_colour_scale(continuous_colour_scale)
     """
     fig = go.Figure(
         go.Heatmap(

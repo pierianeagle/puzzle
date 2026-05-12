@@ -61,8 +61,8 @@ def get_cross_validator_bounds(index: pd.DatetimeIndex, split_iterator: Iterable
 
     Typical usage example:
     >>> index = pd.date_range(start_datetime, end_datetime, freq="D")
-    ... cv = TimeSeriesSplit(n_splits=5)
-    ... df_bounds = get_cross_validator_bounds(index, cv.split(index))
+    >>> cv = TimeSeriesSplit(n_splits=5)
+    >>> df_bounds = get_cross_validator_bounds(index, cv.split(index))
     """
 
     def _generate_contiguous_bounds(

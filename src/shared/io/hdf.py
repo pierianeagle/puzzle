@@ -26,7 +26,7 @@ def write_dataframe_with_metadata_to_hdf(
 
     Typical usage example:
     >>> metadata = {"local_tz": "Europe/London"}
-    ... write_dataframe_with_metadata_to_hdf(filepath, df, **metadata)
+    >>> write_dataframe_with_metadata_to_hdf(filepath, df, **metadata)
     """
     store = pd.HDFStore(filepath)
     store.put(key, df)

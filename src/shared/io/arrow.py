@@ -12,8 +12,8 @@ def read_feather_data_from_catalog(
     dtype: Literal["pandas", "arrow"] = "pandas",
 ) -> pd.DataFrame:
     """Read feather data that's been saved to the catalog."""
-    with open(filepath, "rb") as f:
-        stream = pa.ipc.open_stream(f)
+    with open(filepath, "rb") as file:
+        stream = pa.ipc.open_stream(file)
         table = stream.read_all()
 
     if dtype == "arrow":
@@ -61,7 +61,7 @@ def write_dataframe_with_metadata_to_parquet(
 
     Typical usage example:
     >>> metadata = {"local_tz": "Europe/London"}
-    ... write_dataframe_with_metadata_to_parquet(filepath, df, **metadata)
+    >>> write_dataframe_with_metadata_to_parquet(filepath, df, **metadata)
     """
     table = pa.Table.from_pandas(df)
 

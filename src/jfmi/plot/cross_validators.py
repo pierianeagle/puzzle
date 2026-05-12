@@ -24,9 +24,9 @@ def plot_cross_validator_splits(
 
     Typical usage example:
     >>> df_bounds = get_cross_validator_bounds(df.index, cv.split(df[features]))
-    ... colour_scale = px.colors.sequential.Viridis
-    ... continuous_colour_scale = px.colors.make_colorscale(colour_scale)
-    ... fig = plot_cross_validator_splits(df_bounds, df.index, continuous_colour_scale)
+    >>> colour_scale = px.colors.sequential.Viridis
+    >>> continuous_colour_scale = px.colors.make_colorscale(colour_scale)
+    >>> fig = plot_cross_validator_splits(df_bounds, df.index, continuous_colour_scale)
     """
     # If the colour scale wasn't supplied, grab it from the theme.
     if continuous_colour_scale is None:

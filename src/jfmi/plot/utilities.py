@@ -60,8 +60,8 @@ def create_colour_map(groups: list, colour_scale: list[str]) -> dict:
 
     Typical usage example:
     >>> groups = ["train", "validate", "test"]
-    ... colour_scale = px.colors.sequential.Viridis
-    ... colour_map = create_colour_map(groups, colour_scale)
+    >>> colour_scale = px.colors.sequential.Viridis
+    >>> colour_map = create_colour_map(groups, colour_scale)
     """
     colours = pc.sample_colorscale(colour_scale, len(groups))
 
