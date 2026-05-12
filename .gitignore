@@ -188,6 +188,7 @@ cython_debug/
 .cursorindexingignore
 
 # Extra bits and bobs
+.claude/
 catalog/
 logs/
 tmp/
