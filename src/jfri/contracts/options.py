@@ -18,7 +18,7 @@ class OptionsChainMetadata(BaseModel):
 
     source: Literal["av", "cboe"]
     endpoint: str
-    message: str
+    message: str | None = None
     source_file_path: str
     source_file_sha256: str
 
@@ -35,8 +35,8 @@ class OptionsChain(pa.DataFrameModel):
     point of use.
     """
 
-    option: Series[str]
-    symbol: Series[str] = pa.Field(unique=True)
+    option: Series[str] = pa.Field(unique=True)
+    symbol: Series[str]
     expiration: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field()  # type: ignore
     strike: Series[float] = pa.Field(gt=0)
     type: Series[str] = pa.Field(isin=["call", "put"])
@@ -71,8 +71,13 @@ class OptionsChain(pa.DataFrameModel):
 
     @pa.dataframe_check
     @classmethod
-    def option_unique(cls, df: pd.DataFrame) -> bool:
-        return ~df["option"].duplicated(keep=False)
+    def symbol_constant(cls, df: pd.DataFrame) -> bool:
+        return df["symbol"].nunique() == 1
+
+    @pa.dataframe_check
+    @classmethod
+    def date_constant(cls, df: pd.DataFrame) -> bool:
+        return df["date"].nunique() == 1
 
     @pa.dataframe_check
     @classmethod

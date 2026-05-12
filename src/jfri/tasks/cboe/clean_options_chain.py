@@ -18,7 +18,7 @@ from jfri.tasks.clean_options_chain import (
 )
 from shared.io.arrow import write_dataframe_with_metadata_to_parquet
 
-TRANSFORM_VERSION = "1.0.0"
+TRANSFORM_VERSION = "1.1.0"
 
 RENAMES = {
     "iv": "implied_volatility",

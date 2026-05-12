@@ -17,7 +17,7 @@ from jfri.tasks.clean_options_chain import (
 )
 from shared.io.arrow import write_dataframe_with_metadata_to_parquet
 
-TRANSFORM_VERSION = "1.2.0"
+TRANSFORM_VERSION = "1.3.0"
 
 RENAMES = {
     "contractID": "option",
