@@ -112,6 +112,6 @@ def resolve_bad_rows(df: pd.DataFrame, sr_bad: pd.Series) -> pd.DataFrame:
         raise ValueError(f"Day considered invalid; bad rows {fraction:.2%} of day.")
 
     if n_bad:
-        logger.warning("Dropping %d row(s) (%.2%% of day).", n_bad, fraction * 100)
+        logger.warning("Dropping %d row(s) (%.2f%% of day).", n_bad, fraction * 100)
 
     return df.loc[~sr_bad].reset_index(drop=True)
