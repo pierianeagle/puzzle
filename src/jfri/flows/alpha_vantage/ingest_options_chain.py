@@ -64,6 +64,7 @@ def backfill_ingest_historic_options_chain(symbol: str, params: dict | None = No
     futures = [
         ingest_data_as_json.submit(
             get_historic_options_chain_filepath("ingested", symbol, date),
+            "HISTORICAL_OPTIONS",
             {"symbol": symbol, "date": date.strftime("%Y-%m-%d"), **(params or {})},
         )
         for date in missing
