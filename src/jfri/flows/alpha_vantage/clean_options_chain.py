@@ -42,7 +42,7 @@ def _needs_cleaning(symbol: str, date: pd.Timestamp) -> bool:
 
     _, metadata = read_dataframe_with_metadata_from_parquet(cleaned_path)
 
-    return metadata.get("transform_version") != TRANSFORM_VERSION
+    return metadata.get("prefect_flow_version") != TRANSFORM_VERSION
 
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=32))
