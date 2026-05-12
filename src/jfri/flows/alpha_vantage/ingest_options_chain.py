@@ -16,6 +16,8 @@ def ingest_historic_options_chain(
 ):
     """Ingest a historic EOD options chain as JSON.
 
+    This task will re-process the given day's data.
+
     `date` is an ISO string (YYYY-MM-DD) so cron- and YAML-driven deployments can
     supply it. Defaulting to today lets the daily cron fire with no params.
     """
