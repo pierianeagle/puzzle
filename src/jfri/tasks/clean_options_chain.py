@@ -3,8 +3,6 @@ from prefect import get_run_logger
 
 from jfri.contracts.occ import parse_occ_tickers
 
-BAD_ROW_LIMIT_FRACTION = 0.05
-
 
 def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
     """Pick the most-active row per contract when duplicates are emitted.
@@ -94,7 +92,11 @@ def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
     return sr_mismatched
 
 
-def resolve_bad_rows(df: pd.DataFrame, sr_bad: pd.Series) -> pd.DataFrame:
+def resolve_bad_rows(
+    df: pd.DataFrame,
+    sr_bad: pd.Series,
+    bad_row_limit_fraction: float = 0.05,
+) -> pd.DataFrame:
     """Drop rows considered corrupt.
 
     The day's data is considered invalid if the number of corrupt rows exceeds some
@@ -108,7 +110,7 @@ def resolve_bad_rows(df: pd.DataFrame, sr_bad: pd.Series) -> pd.DataFrame:
     n_bad = sr_bad.sum()
     fraction = n_bad / len(df)
 
-    if fraction > BAD_ROW_LIMIT_FRACTION:
+    if fraction > bad_row_limit_fraction:
         raise ValueError(f"Day considered invalid; bad rows {fraction:.2%} of day.")
 
     if n_bad:
