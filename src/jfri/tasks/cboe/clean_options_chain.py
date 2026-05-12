@@ -50,12 +50,12 @@ NUMERIC_COLUMNS = [*FLOAT_COLUMNS, *INT_COLUMNS]
 
 @task
 def clean_and_validate_data(
-    df_ingested: pd.DataFrame, symbol: str, datetime: pd.Timestamp
+    df_ingested: pd.DataFrame, symbol: str, timestamp: pd.Timestamp
 ) -> DataFrame[OptionsChain]:
     """Clean and validate an ingested EOD options chain."""
     df = df_ingested.rename(columns=RENAMES)
 
-    df_parsed = parse_occ_tickers(df["contract_id"])
+    df_parsed = parse_occ_tickers(df["option"])
 
     # Separate weeklies.
     df = df.loc[df_parsed["underlying"] == symbol].reset_index(drop=True)
@@ -65,7 +65,7 @@ def clean_and_validate_data(
     df["expiration"] = df_parsed["expiration"].dt.tz_localize("US/Eastern")
     df["strike"] = df_parsed["strike"].astype("float64")
     df["type"] = df_parsed["type"]
-    df["date"] = datetime.normalize()
+    df["date"] = timestamp.normalize()
 
     for col in NUMERIC_COLUMNS:
         df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -106,7 +106,6 @@ def clean_todays_options_chain(
     metadata = OptionsChainMetadata(
         source="cboe",
         endpoint=f"/api/global/delayed_quotes/options/_{ticker}.json",
-        message="ok",
         source_file_path=str(ingested_path),
         source_file_sha256=hashlib.sha256(raw_bytes).hexdigest(),
         processed=datetime.now(UTC),
