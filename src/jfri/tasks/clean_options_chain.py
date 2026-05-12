@@ -64,7 +64,7 @@ def find_invalid_rows(df: pd.DataFrame) -> pd.Series:
 def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
     """Find rows where the contract disagrees with the source's other columns.
 
-    A cross-check for sources that emit `strike`, `expiration`, `type` and `symbol`
+    A cross-check for sources that return `strike`, `expiration`, `type` and `symbol`
     columns separately from the contract. Any disagreement is considered corruption.
     """
     logger = get_run_logger()
