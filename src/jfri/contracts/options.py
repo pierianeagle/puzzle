@@ -1,0 +1,86 @@
+from datetime import datetime
+from typing import Literal
+from uuid import UUID
+
+import pandas as pd
+import pandera.pandas as pa
+from pandera.engines.pandas_engine import DateTime
+from pandera.typing.pandas import Series
+from pydantic import BaseModel
+
+
+class OptionsChainMetadata(BaseModel):
+    """Provenance metadata for a cleaned EOD options chain Parquet file.
+
+    Two layers: source provenance (where the data came from, what the upstream API
+    said about it) and process provenance (how and when this file was produced).
+    """
+
+    source: Literal["av", "cboe"]
+    endpoint: str
+    message: str
+    source_file_path: str
+    source_file_sha256: str
+
+    processed: datetime
+    prefect_flow_version: str
+    prefect_flow_run_id: UUID | None = None
+
+
+class OptionsChain(pa.DataFrameModel):
+    """Cleaned EOD options chain for a single symbol-day.
+
+    Columns are flat (no pandas index) so the on-disk Parquet is portable across
+    Polars, DuckDB and raw pyarrow readers. Consumers reconstruct an index at the
+    point of use.
+    """
+
+    contract_id: Series[str]
+    symbol: Series[str]
+    expiration: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field()  # type: ignore
+    strike: Series[float] = pa.Field(gt=0)
+    type: Series[str] = pa.Field(isin=["call", "put"])
+
+    last: Series[float] = pa.Field(ge=0, nullable=True)
+    mark: Series[float] = pa.Field(ge=0, nullable=True)
+    bid: Series[float] = pa.Field(ge=0, nullable=True)
+    ask: Series[float] = pa.Field(ge=0, nullable=True)
+
+    bid_size: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
+    ask_size: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
+    volume: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
+    open_interest: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
+
+    date: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field()  # type: ignore
+
+    implied_volatility: Series[float] = pa.Field(nullable=True)
+    delta: Series[float] = pa.Field(nullable=True)
+    gamma: Series[float] = pa.Field(nullable=True)
+    theta: Series[float] = pa.Field(nullable=True)
+    vega: Series[float] = pa.Field(nullable=True)
+    rho: Series[float] = pa.Field(nullable=True)
+
+    class Config:
+        coerce = True
+        strict = True
+
+    @pa.dataframe_check
+    @classmethod
+    def non_empty(cls, df: pd.DataFrame) -> bool:
+        return len(df) > 0
+
+    @pa.dataframe_check
+    @classmethod
+    def contract_id_unique(cls, df: pd.DataFrame) -> bool:
+        return not df["contract_id"].duplicated().any()
+
+    @pa.dataframe_check
+    @classmethod
+    def bid_le_ask(cls, df: pd.DataFrame) -> pd.Series:
+        """Allow zero-sided quotes; reject genuinely crossed quotes."""
+        return (df["bid"] <= df["ask"]) | (df["bid"] == 0) | (df["ask"] == 0)
+
+    @pa.dataframe_check
+    @classmethod
+    def expiration_ge_date(cls, df: pd.DataFrame) -> pd.Series:
+        return df["expiration"] >= df["date"]
