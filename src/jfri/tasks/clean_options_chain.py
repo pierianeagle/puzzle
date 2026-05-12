@@ -42,7 +42,7 @@ def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def find_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
+def find_invalid_rows(df: pd.DataFrame) -> pd.Series:
     """Find rows with impossible strikes, crossed quotes, or stale contracts.
 
     Contracts whose expiration precedes the snapshot date are considered stale.
@@ -63,7 +63,7 @@ def find_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
     return sr_invalid
 
 
-def find_mismatched_rows(df: pd.DataFrame) -> pd.DataFrame:
+def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
     """Find rows where the contract disagrees with the source's other columns.
 
     A cross-check for sources that emit `strike`, `expiration`, `type` and `symbol`
