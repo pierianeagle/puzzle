@@ -20,7 +20,7 @@ from shared.io.catalog import get_catalog_external_directory
 def clean_historic_options_chain(symbol: str, date: str) -> None:
     """Promote an ingested historic EOD options chain to Parquet.
 
-    This task will re-process the given day's data.
+    This flow will re-process the given day's data.
 
     `date` is an ISO string (YYYY-MM-DD) so the event-trigger payload from
     `ingest_historic_options_chain_task` flows through directly.

@@ -9,7 +9,7 @@ from jfri.tasks.cboe.client import get_cboe_options_chain
 
 
 @task
-def ingest_todays_options_chain(ingested_path: Path, ticker: str):
+def ingest_todays_options_chain(ingested_path: Path, ticker: str) -> None:
     """Ingest today's EOD options chain as JSON."""
     logger = get_run_logger()
 
@@ -27,7 +27,7 @@ def ingest_todays_options_chain(ingested_path: Path, ticker: str):
 
 @task
 def get_unique_symbols(ingested_path: Path):
-    """Return the unique symbols EOD options chain as JSON."""
+    """Return the unique symbols that appear in the ingested EOD options chain."""
     payload = json.loads(ingested_path.read_bytes())
     records = payload["data"]["options"]
 

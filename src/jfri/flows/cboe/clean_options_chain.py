@@ -9,7 +9,7 @@ from jfri.tasks.cboe.clean_options_chain import clean_todays_options_chain
 def clean_todays_options_chain_flow(ticker: str, symbol: str, date: str) -> None:
     """Promote an ingested EOD options chain to Parquet.
 
-    This task will re-process the given day's data.
+    This flow will re-process the given day's data.
 
     `ticker` is the URL-level identifier the file was fetched with (e.g. `SPX`),
     `symbol` is the OCC underlying to extract (e.g. `SPX` or `SPXW`). Each invocation
