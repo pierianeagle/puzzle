@@ -34,7 +34,7 @@ def ingest_historic_options_chain(
         emit_event(
             event=INGESTED_EVENT,
             resource={"prefect.resource.id": RESOURCE_ID},
-            payload={"symbol": symbol, "date": iso_date, "path": str(ingested_path)},
+            payload={"symbol": symbol, "date": iso_date},
         )
 
 
