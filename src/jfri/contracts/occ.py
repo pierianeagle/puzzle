@@ -45,15 +45,15 @@ def parse_occ_ticker(ticker: str) -> OccTicker:
     )
 
 
-def parse_occ_tickers(contract_ids: pd.Series) -> pd.DataFrame:
+def parse_occ_tickers(options: pd.Series) -> pd.DataFrame:
     """Parse a series of OCC OSI tickers.
 
     Returns:
-        A DataFrame aligned to `contract_ids.index`.
+        A DataFrame aligned to `options.index`.
     """
-    df_parsed = contract_ids.str.extract(OCC_TICKER_RE)
+    df_parsed = options.str.extract(OCC_TICKER_RE)
 
-    failed = contract_ids[df_parsed["u"].isna()]
+    failed = options[df_parsed["u"].isna()]
 
     if not failed.empty:
         warnings.warn(
@@ -70,5 +70,5 @@ def parse_occ_tickers(contract_ids: pd.Series) -> pd.DataFrame:
             "type": df_parsed["t"].map(OPTION_TYPE_MAP),
             "strike": df_parsed["s"].astype("Int64") / 1000,
         },
-        index=contract_ids.index,
+        index=options.index,
     )

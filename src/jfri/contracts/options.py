@@ -35,7 +35,7 @@ class OptionsChain(pa.DataFrameModel):
     point of use.
     """
 
-    contract_id: Series[str]
+    option: Series[str]
     symbol: Series[str]
     expiration: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field()  # type: ignore
     strike: Series[float] = pa.Field(gt=0)
@@ -71,8 +71,8 @@ class OptionsChain(pa.DataFrameModel):
 
     @pa.dataframe_check
     @classmethod
-    def contract_id_unique(cls, df: pd.DataFrame) -> bool:
-        return not df["contract_id"].duplicated().any()
+    def option_unique(cls, df: pd.DataFrame) -> bool:
+        return not df["option"].duplicated().any()
 
     @pa.dataframe_check
     @classmethod
