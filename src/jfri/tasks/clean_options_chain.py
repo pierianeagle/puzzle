@@ -12,7 +12,7 @@ def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
     """
     logger = get_run_logger()
 
-    sr_duplicated = df["contract_id"].duplicated(keep=False)
+    sr_duplicated = df["option"].duplicated(keep=False)
 
     if not sr_duplicated.any():
         return df
@@ -25,14 +25,14 @@ def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
         ["_quoted", "_traded", "_held"], ascending=False
     )
 
-    for contract_id, group in df_conflicts.groupby("contract_id"):
+    for option, group in df_conflicts.groupby("option"):
         logger.warning(
             "Resolving contract: %s (first row chosen):\n%s",
-            contract_id,
+            option,
             group.to_string(index=True),
         )
 
-    df_conflicts_resolved = df_conflicts.drop_duplicates("contract_id", keep="first")
+    df_conflicts_resolved = df_conflicts.drop_duplicates("option", keep="first")
     df_result = pd.concat([df[~sr_duplicated], df_conflicts_resolved])
 
     return df_result.drop(columns=["_quoted", "_traded", "_held"]).reset_index(
@@ -69,7 +69,7 @@ def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
     """
     logger = get_run_logger()
 
-    df_parsed = parse_occ_tickers(df["contract_id"])
+    df_parsed = parse_occ_tickers(df["option"])
 
     sr_bad_symbol = df["symbol"] != df_parsed["underlying"]
     # The parsed expiration date will always be tz-naive.
