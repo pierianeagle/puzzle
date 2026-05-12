@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 
 class OptionsChainMetadata(BaseModel):
-    """Provenance metadata for a cleaned EOD options chain Parquet file.
+    """Metadata for a cleaned EOD options chain.
 
     Two layers: source provenance (where the data came from, what the upstream API
     said about it) and process provenance (how and when this file was produced).
@@ -28,15 +28,15 @@ class OptionsChainMetadata(BaseModel):
 
 
 class OptionsChain(pa.DataFrameModel):
-    """Cleaned EOD options chain for a single symbol-day.
+    """Cleaned EOD options chain for a single symbol and day.
 
     Columns are flat (no pandas index) so the on-disk Parquet is portable across
-    Polars, DuckDB and raw pyarrow readers. Consumers reconstruct an index at the
+    Polars, DuckDB and raw PyArrow readers. Consumers reconstruct an index at the
     point of use.
     """
 
     option: Series[str]
-    symbol: Series[str]
+    symbol: Series[str] = pa.Field(unique=True)
     expiration: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field()  # type: ignore
     strike: Series[float] = pa.Field(gt=0)
     type: Series[str] = pa.Field(isin=["call", "put"])
@@ -72,7 +72,7 @@ class OptionsChain(pa.DataFrameModel):
     @pa.dataframe_check
     @classmethod
     def option_unique(cls, df: pd.DataFrame) -> bool:
-        return not df["option"].duplicated().any()
+        return ~df["option"].duplicated(keep=False)
 
     @pa.dataframe_check
     @classmethod
