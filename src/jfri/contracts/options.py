@@ -22,6 +22,8 @@ class OptionsChainMetadata(BaseModel):
     source_file_path: str
     source_file_sha256: str
 
+    underlying_price: float | None = None
+
     processed: datetime
     prefect_flow_version: str
     prefect_flow_run_id: UUID | None = None
