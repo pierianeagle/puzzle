@@ -23,7 +23,7 @@ def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
     df["_held"] = df["open_interest"].fillna(0) > 0
 
     df_conflicts = df[sr_duplicated].sort_values(
-        ["_quoted", "_traded", "_held"], ascending=False
+        ["_quoted", "_traded", "_held", "last", "mark"], ascending=False
     )
 
     for option, group in df_conflicts.groupby("option"):
