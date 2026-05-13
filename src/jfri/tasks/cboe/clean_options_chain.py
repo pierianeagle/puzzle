@@ -11,14 +11,16 @@ from prefect.runtime import flow_run
 from jfri.contracts.occ import parse_occ_tickers
 from jfri.contracts.options import OptionsChain, OptionsChainMetadata
 from jfri.tasks.clean_options_chain import (
+    find_arbitrage_violations,
     find_invalid_rows,
+    find_low_quality_rows,
     find_mismatched_rows,
     resolve_bad_rows,
     resolve_duplicate_contracts,
 )
 from shared.io.arrow import write_dataframe_with_metadata_to_parquet
 
-TRANSFORM_VERSION = "1.1.0"
+TRANSFORM_VERSION = "1.2.0"
 
 RENAMES = {
     "iv": "implied_volatility",
@@ -50,7 +52,10 @@ NUMERIC_COLUMNS = [*FLOAT_COLUMNS, *INT_COLUMNS]
 
 @task
 def clean_and_validate_data(
-    df_ingested: pd.DataFrame, symbol: str, timestamp: pd.Timestamp
+    df_ingested: pd.DataFrame,
+    symbol: str,
+    timestamp: pd.Timestamp,
+    underlying_price: float,
 ) -> DataFrame[OptionsChain]:
     """Clean and validate an ingested EOD options chain."""
     df = df_ingested.rename(columns=RENAMES)
@@ -74,7 +79,12 @@ def clean_and_validate_data(
 
     sr_invalid = find_invalid_rows(df)
     sr_mismatched = find_mismatched_rows(df)
-    df = resolve_bad_rows(df, sr_invalid | sr_mismatched)
+    sr_low_quality = find_low_quality_rows(df)
+    sr_arbitrage_violations = find_arbitrage_violations(df, spot=underlying_price)
+
+    sr_bad = sr_invalid | sr_mismatched | sr_low_quality | sr_arbitrage_violations
+
+    df = resolve_bad_rows(df, sr_bad)
 
     schema_columns = list(OptionsChain.to_schema().columns)
 
@@ -97,10 +107,16 @@ def clean_todays_options_chain(
     payload = json.loads(raw_bytes)
     records = payload["data"]["options"]
 
+    # CBOE include's the underlying's last price, so there's no need to load it here.
+    underlying_price = float(payload["data"]["current_price"])
+
     df_ingested = pd.DataFrame.from_records(records)
 
     df = clean_and_validate_data(
-        df_ingested, symbol, pd.Timestamp(payload["timestamp"], tz="US/Eastern")
+        df_ingested,
+        symbol,
+        pd.Timestamp(payload["timestamp"], tz="US/Eastern"),
+        underlying_price,
     )
 
     metadata = OptionsChainMetadata(
@@ -108,6 +124,7 @@ def clean_todays_options_chain(
         endpoint=f"/api/global/delayed_quotes/options/_{ticker}.json",
         source_file_path=str(ingested_path),
         source_file_sha256=hashlib.sha256(raw_bytes).hexdigest(),
+        underlying_price=underlying_price,
         processed=datetime.now(UTC),
         prefect_flow_version=TRANSFORM_VERSION,
         prefect_flow_run_id=flow_run.get_id(),
