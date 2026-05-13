@@ -239,7 +239,7 @@ def find_arbitrage_violations(
 def resolve_bad_rows(
     df: pd.DataFrame,
     sr_bad: pd.Series,
-    bad_row_limit_fraction: float = 0.05,
+    bad_row_limit_fraction: float = 0.20,
 ) -> pd.DataFrame:
     """Drop rows considered corrupt.
 
