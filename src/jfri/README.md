@@ -15,6 +15,8 @@ End-of-day options-chains from two sources are ingested, cleaned, and validated 
 
 I'm currently sourcing data from CBOE's public delayed quotes feed which has a 15 minute delay (which can be checked by comparing `timestamp` to `data.last_trade_time`). True intraday open interest data however, is not publicly available, so that data is stale by definition - it's OPRA's EOD values from the last day.
 
+Their EOD snapshots are taken at 4:15pm ET, not 4:00pm, because SPX options trade until then.
+
 For whatever reason, the top-level `timestamp` is **UTC** (server clock), but per-contract `last_trade_time` (and top-level `data.last_trade_time`) is **US/Eastern** (exchange wall clock).
 
 ## Rate and Concurrency limits
