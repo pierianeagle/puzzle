@@ -58,11 +58,11 @@ class OptionsChain(pa.DataFrameModel):
     volume: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
     open_interest: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
 
-    implied_volatility: Series[float] = pa.Field(nullable=True)
-    delta: Series[float] = pa.Field(nullable=True)
-    gamma: Series[float] = pa.Field(nullable=True)
+    implied_volatility: Series[float] = pa.Field(ge=0, nullable=True)
+    delta: Series[float] = pa.Field(ge=-1, le=1, nullable=True)
+    gamma: Series[float] = pa.Field(ge=0, nullable=True)
     theta: Series[float] = pa.Field(nullable=True)
-    vega: Series[float] = pa.Field(nullable=True)
+    vega: Series[float] = pa.Field(ge=0, nullable=True)
     rho: Series[float] = pa.Field(nullable=True)
 
     class Config:
@@ -79,7 +79,6 @@ class OptionsChain(pa.DataFrameModel):
     def symbol_constant(cls, df: pd.DataFrame) -> bool:
         return df["symbol"].nunique() == 1
 
-    # Not appropriate for intraday data.
     # @pa.dataframe_check
     # @classmethod
     # def date_constant(cls, df: pd.DataFrame) -> bool:
@@ -91,7 +90,6 @@ class OptionsChain(pa.DataFrameModel):
         """Allow zero-sided quotes; reject genuinely crossed quotes."""
         return (df["bid"] <= df["ask"]) | (df["bid"] == 0) | (df["ask"] == 0)
 
-    # Not appropriate for intraday data.
     # @pa.dataframe_check
     # @classmethod
     # def expiration_ge_date(cls, df: pd.DataFrame) -> pd.Series:

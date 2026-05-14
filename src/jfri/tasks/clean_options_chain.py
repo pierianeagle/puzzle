@@ -68,13 +68,19 @@ def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def find_invalid_rows(df: pd.DataFrame) -> pd.Series:
-    """Find rows with impossible strikes or crossed quotes."""
+    """Find rows with impossible strikes, crossed quotes, or impossible greeks.
+
+    Pandas' comparisons against NaNs return False, so the checks short-circuit cleanly.
+    """
     logger = get_run_logger()
 
     sr_zero_strike = df["strike"] == 0
     sr_crossed = (df["bid"] > df["ask"]) & (df["bid"] > 0) & (df["ask"] > 0)
-    # Not appropriate for intraday data.
     # sr_expired = df["expiration"] < df["date"]
+    sr_negative_implied_volatility = df["implied_volatility"] < 0
+    sr_large_delta = df["delta"].abs() > 1
+    sr_negative_gamma = df["gamma"] < 0
+    sr_negative_vega = df["vega"] < 0
 
     if sr_zero_strike.any():
         logger.warning("Found %d row(s) with zero strikes.", sr_zero_strike.sum())
@@ -82,8 +88,26 @@ def find_invalid_rows(df: pd.DataFrame) -> pd.Series:
         logger.warning("Found %d row(s) with crossed quotes.", sr_crossed.sum())
     # if sr_expired.any():
     #     logger.warning("Found %d row(s) with expired contracts.", sr_expired.sum())
+    if sr_negative_implied_volatility.any():
+        logger.warning(
+            "Found %d row(s) with negative implied volatility.",
+            sr_negative_implied_volatility.sum(),
+        )
+    if sr_large_delta.any():
+        logger.warning("Found %d row(s) with |delta| > 1.", sr_large_delta.sum())
+    if sr_negative_gamma.any():
+        logger.warning("Found %d row(s) with negative gamma.", sr_negative_gamma.sum())
+    if sr_negative_vega.any():
+        logger.warning("Found %d row(s) with negative vega.", sr_negative_vega.sum())
 
-    sr_invalid = sr_zero_strike | sr_crossed
+    sr_invalid = (
+        sr_zero_strike
+        | sr_crossed
+        | sr_large_delta
+        | sr_negative_gamma
+        | sr_negative_vega
+        | sr_negative_implied_volatility
+    )
 
     return sr_invalid
 
@@ -139,13 +163,12 @@ def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
 def find_low_quality_rows(
     df: pd.DataFrame,
     max_relative_spread: float = 0.75,
-    min_bid: float = 0.05,
 ) -> pd.Series:
     """Find rows whose quote is unusable for pricing.
 
     This includes rows that don't have two-sided markets and have no open interest
-    and no volume, have tiny bids which are quote-noise, and have wide spreads.
-    One-sided markets are not excluded here.
+    and no volume, and rows with wide spreads. One-sided markets are not excluded
+    here.
     """
     logger = get_run_logger()
 
@@ -159,21 +182,14 @@ def find_low_quality_rows(
     relative_spread = np.where(two_sided, (ask - bid) / np.maximum(mid, 0.25), np.inf)
 
     sr_truly_empty = (bid == 0) & (ask == 0) & (open_interest == 0) & (volume == 0)
-    sr_tiny_bid = (bid > 0) & (bid < min_bid)
     sr_wide_spread = pd.Series(
         two_sided & (relative_spread > max_relative_spread), index=df.index
     )
 
-    sr_low_quality = sr_truly_empty | sr_tiny_bid | sr_wide_spread
+    sr_low_quality = sr_truly_empty | sr_wide_spread
 
     if sr_truly_empty.any():
         logger.warning("Found %d row(s) that're empty.", sr_truly_empty.sum())
-    if sr_tiny_bid.any():
-        logger.warning(
-            "Found %d row(s) with tiny bids (bid < %.2f)",
-            sr_tiny_bid.sum(),
-            min_bid,
-        )
     if sr_wide_spread.any():
         logger.warning(
             "Found %d row(s) with wide spreads (relative_spread > %.2f)",
