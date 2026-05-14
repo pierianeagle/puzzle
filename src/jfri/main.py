@@ -59,7 +59,14 @@ if __name__ == "__main__":
         ),
         cboe_ingest_todays_options_chain.to_deployment(
             name="ingest_todays_spx_historic_options_chain_from_cboe",
-            schedule=Cron("30 16 * * 1-5", timezone="America/New_York"),
+            schedules=[
+                # 9:30, 9:45
+                Cron("30,45 9 * * 1-5", timezone="America/New_York"),
+                # 10:00, 10:15, 10:30, ..., 15:45
+                Cron("*/15 10-15 * * 1-5", timezone="America/New_York"),
+                # 16:00, 16:15, 16:30
+                Cron("0,15,30 16 * * 1-5", timezone="America/New_York"),
+            ],
             parameters={"ticker": "SPX"},
         ),
         cboe_clean_todays_options_chain.to_deployment(

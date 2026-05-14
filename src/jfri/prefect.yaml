@@ -60,7 +60,13 @@ deployments:
     parameters:
       ticker: SPX
     schedules:
-      - cron: "30 16 * * 1-5"
+      - cron: "30,45 9 * * 1-5"
+        timezone: "America/New_York"
+        active: true
+      - cron: "*/15 10-15 * * 1-5"
+        timezone: "America/New_York"
+        active: true
+      - cron: "0,15,30 16 * * 1-5"
         timezone: "America/New_York"
         active: true
 
