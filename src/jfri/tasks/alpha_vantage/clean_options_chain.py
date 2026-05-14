@@ -20,18 +20,19 @@ from jfri.tasks.clean_options_chain import (
 )
 from shared.io.arrow import write_dataframe_with_metadata_to_parquet
 
-TRANSFORM_VERSION = "1.4.0"
+TRANSFORM_VERSION = "1.6.0"
 
 RENAMES = {
     "contractID": "option",
+    "last": "last_trade_price",
 }
 
 FLOAT_COLUMNS = (
     "strike",
-    "last",
-    "mark",
+    "last_trade_price",
     "bid",
     "ask",
+    "mark",
     "implied_volatility",
     "delta",
     "gamma",
@@ -93,6 +94,10 @@ def read_ingested_data_and_validate_metadata(
         source_file_path=str(ingested_path),
         source_file_sha256=hashlib.sha256(raw_bytes).hexdigest(),
         underlying_price=underlying_price,
+        # This matches CBOE's EOD snapshot convention.
+        ingested=date.replace(hour=16, minute=15)
+        .tz_localize("US/Eastern")
+        .to_pydatetime(),
         processed=datetime.now(UTC),
         prefect_flow_version=TRANSFORM_VERSION,
         prefect_flow_run_id=flow_run.get_id(),
@@ -115,8 +120,10 @@ def clean_and_validate_data(
     for col in NUMERIC_COLUMNS:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    df["date"] = pd.to_datetime(df["date"]).dt.tz_localize("US/Eastern")
     df["expiration"] = pd.to_datetime(df["expiration"]).dt.tz_localize("US/Eastern")
+    df["last_trade_time"] = pd.Series(
+        pd.NaT, index=df.index, dtype="datetime64[ns, US/Eastern]"
+    )
 
     df = resolve_duplicate_contracts(df)
 

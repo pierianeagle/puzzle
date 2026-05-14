@@ -24,6 +24,7 @@ class OptionsChainMetadata(BaseModel):
 
     underlying_price: float | None = None
 
+    ingested: datetime
     processed: datetime
     prefect_flow_version: str
     prefect_flow_run_id: UUID | None = None
@@ -43,17 +44,19 @@ class OptionsChain(pa.DataFrameModel):
     strike: Series[float] = pa.Field(gt=0)
     type: Series[str] = pa.Field(isin=["call", "put"])
 
-    last: Series[float] = pa.Field(ge=0, nullable=True)
-    mark: Series[float] = pa.Field(ge=0, nullable=True)
+    last_trade_price: Series[float] = pa.Field(ge=0, nullable=True)
+    last_trade_time: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field(  # type: ignore
+        nullable=True
+    )
+
     bid: Series[float] = pa.Field(ge=0, nullable=True)
     ask: Series[float] = pa.Field(ge=0, nullable=True)
+    mark: Series[float] = pa.Field(ge=0, nullable=True)
 
     bid_size: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
     ask_size: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
     volume: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
     open_interest: Series[pd.Int64Dtype] = pa.Field(ge=0, nullable=True)
-
-    date: Series[DateTime(tz="US/Eastern", unit="ns")] = pa.Field()  # type: ignore
 
     implied_volatility: Series[float] = pa.Field(nullable=True)
     delta: Series[float] = pa.Field(nullable=True)
@@ -76,10 +79,11 @@ class OptionsChain(pa.DataFrameModel):
     def symbol_constant(cls, df: pd.DataFrame) -> bool:
         return df["symbol"].nunique() == 1
 
-    @pa.dataframe_check
-    @classmethod
-    def date_constant(cls, df: pd.DataFrame) -> bool:
-        return df["date"].nunique() == 1
+    # Not appropriate for intraday data.
+    # @pa.dataframe_check
+    # @classmethod
+    # def date_constant(cls, df: pd.DataFrame) -> bool:
+    #     return df["date"].nunique() == 1
 
     @pa.dataframe_check
     @classmethod
@@ -87,7 +91,8 @@ class OptionsChain(pa.DataFrameModel):
         """Allow zero-sided quotes; reject genuinely crossed quotes."""
         return (df["bid"] <= df["ask"]) | (df["bid"] == 0) | (df["ask"] == 0)
 
-    @pa.dataframe_check
-    @classmethod
-    def expiration_ge_date(cls, df: pd.DataFrame) -> pd.Series:
-        return df["expiration"] >= df["date"]
+    # Not appropriate for intraday data.
+    # @pa.dataframe_check
+    # @classmethod
+    # def expiration_ge_date(cls, df: pd.DataFrame) -> pd.Series:
+    #     return df["expiration"] >= df["date"]

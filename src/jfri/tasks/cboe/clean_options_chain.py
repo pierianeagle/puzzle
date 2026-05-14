@@ -20,18 +20,17 @@ from jfri.tasks.clean_options_chain import (
 )
 from shared.io.arrow import write_dataframe_with_metadata_to_parquet
 
-TRANSFORM_VERSION = "1.2.0"
+TRANSFORM_VERSION = "1.4.0"
 
 RENAMES = {
     "iv": "implied_volatility",
     "theo": "mark",  # theoretical
-    "last_trade_price": "last",
 }
 
 FLOAT_COLUMNS = (
     "bid",
     "ask",
-    "last",
+    "last_trade_price",
     "implied_volatility",
     "delta",
     "gamma",
@@ -54,7 +53,6 @@ NUMERIC_COLUMNS = [*FLOAT_COLUMNS, *INT_COLUMNS]
 def clean_and_validate_data(
     df_ingested: pd.DataFrame,
     symbol: str,
-    timestamp: pd.Timestamp,
     underlying_price: float,
 ) -> DataFrame[OptionsChain]:
     """Clean and validate an ingested EOD options chain."""
@@ -70,10 +68,13 @@ def clean_and_validate_data(
     df["expiration"] = df_parsed["expiration"].dt.tz_localize("US/Eastern")
     df["strike"] = df_parsed["strike"].astype("float64")
     df["type"] = df_parsed["type"]
-    df["date"] = timestamp.normalize()
 
     for col in NUMERIC_COLUMNS:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    df["last_trade_time"] = pd.to_datetime(
+        df["last_trade_time"], errors="coerce"
+    ).dt.tz_localize("US/Eastern")
 
     df = resolve_duplicate_contracts(df)
 
@@ -112,12 +113,7 @@ def clean_todays_options_chain(
 
     df_ingested = pd.DataFrame.from_records(records)
 
-    df = clean_and_validate_data(
-        df_ingested,
-        symbol,
-        pd.Timestamp(payload["timestamp"], tz="US/Eastern"),
-        underlying_price,
-    )
+    df = clean_and_validate_data(df_ingested, symbol, underlying_price)
 
     metadata = OptionsChainMetadata(
         source="cboe",
@@ -125,6 +121,7 @@ def clean_todays_options_chain(
         source_file_path=str(ingested_path),
         source_file_sha256=hashlib.sha256(raw_bytes).hexdigest(),
         underlying_price=underlying_price,
+        ingested=pd.Timestamp(payload["timestamp"], tz="UTC").to_pydatetime(),
         processed=datetime.now(UTC),
         prefect_flow_version=TRANSFORM_VERSION,
         prefect_flow_run_id=flow_run.get_id(),

@@ -68,24 +68,22 @@ def resolve_duplicate_contracts(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def find_invalid_rows(df: pd.DataFrame) -> pd.Series:
-    """Find rows with impossible strikes, crossed quotes, or stale contracts.
-
-    Contracts whose expiration precedes the snapshot date are considered stale.
-    """
+    """Find rows with impossible strikes or crossed quotes."""
     logger = get_run_logger()
 
     sr_zero_strike = df["strike"] == 0
     sr_crossed = (df["bid"] > df["ask"]) & (df["bid"] > 0) & (df["ask"] > 0)
-    sr_expired = df["expiration"] < df["date"]
+    # Not appropriate for intraday data.
+    # sr_expired = df["expiration"] < df["date"]
 
     if sr_zero_strike.any():
         logger.warning("Found %d row(s) with zero strikes.", sr_zero_strike.sum())
     if sr_crossed.any():
         logger.warning("Found %d row(s) with crossed quotes.", sr_crossed.sum())
-    if sr_expired.any():
-        logger.warning("Found %d row(s) with expired contracts.", sr_expired.sum())
+    # if sr_expired.any():
+    #     logger.warning("Found %d row(s) with expired contracts.", sr_expired.sum())
 
-    sr_invalid = sr_zero_strike | sr_crossed | sr_expired
+    sr_invalid = sr_zero_strike | sr_crossed
 
     return sr_invalid
 
@@ -101,10 +99,9 @@ def find_mismatched_rows(df: pd.DataFrame) -> pd.Series:
     df_parsed = parse_occ_tickers(df["option"])
 
     sr_mismatched_symbol = df["symbol"] != df_parsed["underlying"]
-    # The parsed expiration date will always be tz-naive.
-    sr_mismatched_expiration = df["expiration"] != df_parsed[
-        "expiration"
-    ].dt.tz_localize(df["date"].dt.tz)
+    sr_mismatched_expiration = (
+        df["expiration"].dt.date != df_parsed["expiration"].dt.date
+    )
     sr_mismatched_type = df["type"] != df_parsed["type"]
     sr_mismatched_strike = pd.Series(
         ~np.isclose(df["strike"], df_parsed["strike"], rtol=0, atol=1e-6),
